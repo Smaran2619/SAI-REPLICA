@@ -3,20 +3,22 @@ name: Build and Release Flask App
 on:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -26,46 +28,36 @@ jobs:
           pip install pyinstaller
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Build (Linux/macOS)
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          pyinstaller --onedir --add-data "templates;templates" --add-data "static;static" --add-data "static/webfonts;static/webfonts" app.py
+
+      - name: Build Linux/Mac
         if: runner.os != 'Windows'
         run: |
-          pyinstaller --onedir \
-          --add-data "templates:templates" \
-          --add-data "static:static" \
-          --add-data "static/webfonts:static/webfonts" \
-          app.py
-
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          pyinstaller --onedir `
-          --add-data "templates;templates" `
-          --add-data "static;static" `
-          --add-data "static/webfonts;static/webfonts" `
-          app.py
+          pyinstaller --onedir --add-data "templates:templates" --add-data "static:static" --add-data "static/webfonts:static/webfonts" app.py
 
       - name: Zip build
         run: |
           cd dist
           zip -r app-${{ runner.os }}.zip app
-        shell: bash
 
-      - name: Upload artifact for release
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: build-${{ runner.os }}
           path: dist/*.zip
+
 
   release:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: Build ${{ github.run_number }}
