@@ -2,11 +2,19 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 import sqlite3
 from datetime import datetime, timedelta
 from functools import wraps
+import os
 
 app = Flask(__name__)
 app.secret_key = "xerox_secret_key_2024"
 
 import json as _json, os as _os, sys as _sys
+stu_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "students.json")
+user_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users.json")
+
+if not os.path.exists(stu_path):
+    open(stu_path, 'w').close()
+if not os.path.exists(user_path):
+    open(user_path, 'w').close()
 
 def get_base_path():
     if getattr(_sys, 'frozen', False):
@@ -15,6 +23,7 @@ def get_base_path():
 
 def load_users():
     path = _os.path.join(get_base_path(), "users.json")
+    
     with open(path, "r") as f:
         return _json.load(f)
 
