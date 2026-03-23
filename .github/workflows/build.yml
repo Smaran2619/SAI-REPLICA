@@ -48,10 +48,16 @@ jobs:
         run: |
           pyinstaller --onedir --add-data "templates:templates" --add-data "static:static" --add-data "static/webfonts:static/webfonts" app.py
 
-      - name: Zip build
+      - name: Zip build (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           cd dist
           zip -r app-${{ runner.os }}.zip app
+      
+      - name: Zip build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path dist/app -DestinationPath dist/app-Windows.zip
 
       - uses: actions/upload-artifact@v4
         with:
