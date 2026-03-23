@@ -12,9 +12,13 @@ stu_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "students.js
 user_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users.json")
 
 if not os.path.exists(stu_path):
-    open(stu_path, 'w').close()
+    a=open(stu_path, 'w')
+    a.write(r'{}')
+    a.close()
 if not os.path.exists(user_path):
-    open(user_path, 'w').close()
+    a=open(user_path, 'w')
+    a.write(r'{}')
+    a.close()
 
 def get_base_path():
     if getattr(_sys, 'frozen', False):
